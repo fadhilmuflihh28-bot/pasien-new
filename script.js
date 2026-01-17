@@ -1,111 +1,85 @@
-/* ================= FIREBASE IMPORT ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-
-/* ================= FIREBASE CONFIG ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyBX7yBJtQKU2p4V7x8-kkEvSK14ows4MZY",
-  authDomain: "sistem-pasien-b91d7.firebaseapp.com",
-  projectId: "sistem-pasien-b91d7",
-  storageBucket: "sistem-pasien-b91d7.firebasestorage.app",
-  messagingSenderId: "831765150776",
-  appId: "1:831765150776:web:c68098b385eb4c25167acd"
-};
-
-/* ================= INIT ================= */
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-const auth = getAuth(firebaseApp);
-
 const app = document.getElementById("app");
+
+/* ================= STORAGE ================= */
+function save(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function load(key) {
+  return JSON.parse(localStorage.getItem(key)) || {};
+}
 
 /* ================= HALAMAN AWAL ================= */
 function welcome() {
   app.innerHTML = `
-    <h2>Sistem Pasien</h2>
-    <p>Pemeriksaan Pasien Online</p>
-
+    <h2>Selamat Datang 👋</h2>
+    <p>Sistem Pemeriksaan Pasien</p>
     <button onclick="loginDokter()">Dokter</button>
-    <button class="secondary" onclick="halamanPasien()">Pasien</button>
+    <button onclick="halamanPasien()">Pasien</button>
   `;
 }
-window.welcome = welcome;
 
 /* ================= LOGIN DOKTER ================= */
 function loginDokter() {
   app.innerHTML = `
     <h3>Login Dokter</h3>
-
-    <input id="email" placeholder="Email">
+    <input id="user" placeholder="Username">
     <input id="pw" type="password" placeholder="Password">
-
-    <button onclick="loginAuth()">Login</button>
-    <div class="link" onclick="registerDokter()">Tidak punya akun? Daftar</div>
-
-    <button class="secondary" onclick="welcome()">Kembali</button>
+    <button onclick="cekLogin()">Login</button>
+    <button onclick="register()">Daftar</button>
+    <button onclick="welcome()">Kembali</button>
   `;
 }
-window.loginDokter = loginDokter;
+
+function cekLogin() {
+  const user = document.getElementById("user").value.trim();
+  const pw = document.getElementById("pw").value.trim();
+  const akun = load("akun");
+
+  if (!user || !pw) {
+    alert("Username dan password wajib diisi");
+    return;
+  }
+
+  if (akun[user] === pw) {
+    halamanDokter();
+  } else {
+    alert("Username atau password salah");
+  }
+}
 
 /* ================= REGISTER DOKTER ================= */
-function registerDokter() {
+function register() {
   app.innerHTML = `
-    <h3>Daftar Dokter</h3>
-
-    <input id="email" placeholder="Email">
-    <input id="pw" type="password" placeholder="Password (min 6 karakter)">
-
-    <button onclick="registerAuth()">Daftar</button>
-    <button class="secondary" onclick="loginDokter()">Kembali</button>
+    <h3>Daftar Akun Dokter</h3>
+    <input id="user" placeholder="Username">
+    <input id="pw" type="password" placeholder="Password">
+    <button onclick="simpanAkun()">Simpan Akun</button>
+    <button onclick="loginDokter()">Kembali</button>
   `;
 }
-window.registerDokter = registerDokter;
 
-/* ================= AUTH PROCESS ================= */
-async function registerAuth() {
-  const email = document.getElementById("email").value;
-  const pw = document.getElementById("pw").value;
+function simpanAkun() {
+  const user = document.getElementById("user").value.trim();
+  const pw = document.getElementById("pw").value.trim();
+  let akun = load("akun");
 
-  try {
-    await createUserWithEmailAndPassword(auth, email, pw);
-    alert("Akun dokter berhasil dibuat");
-    loginDokter();
-  } catch (e) {
-    alert(e.message);
+  if (!user || !pw) {
+    alert("Semua field wajib diisi");
+    return;
   }
-}
-window.registerAuth = registerAuth;
 
-async function loginAuth() {
-  const email = document.getElementById("email").value;
-  const pw = document.getElementById("pw").value;
-
-  try {
-    await signInWithEmailAndPassword(auth, email, pw);
-    halamanDokter();
-  } catch (e) {
-    alert("Login gagal");
+  if (akun[user]) {
+    alert("Username sudah digunakan");
+    return;
   }
-}
-window.loginAuth = loginAuth;
 
-async function logout() {
-  await signOut(auth);
-  welcome();
+  akun[user] = pw;
+  save("akun", akun);
+
+  alert("Akun berhasil dibuat");
+  loginDokter();
 }
-window.logout = logout;
 
 /* ================= HALAMAN DOKTER ================= */
 function halamanDokter() {
@@ -117,86 +91,112 @@ function halamanDokter() {
     <input id="gejala" placeholder="Gejala">
     <input id="penanganan" placeholder="Penanganan">
     <input id="obat" placeholder="Obat">
-    <input id="kontrol" type="date">
+    <input id="kontrol" placeholder="Tanggal Kontrol">
+
+    <div id="qr"></div>
 
     <button onclick="simpanPasien()">Simpan Data</button>
-    <button class="secondary" onclick="logout()">Logout</button>
+    <button onclick="welcome()">Logout</button>
   `;
 }
-window.halamanDokter = halamanDokter;
 
-/* ================= SIMPAN PASIEN ================= */
-async function simpanPasien() {
-  const nama = document.getElementById("nama").value;
-  const poli = document.getElementById("poli").value;
-  const gejala = document.getElementById("gejala").value;
-  const penanganan = document.getElementById("penanganan").value;
-  const obat = document.getElementById("obat").value;
-  const kontrol = document.getElementById("kontrol").value;
+function simpanPasien() {
+  const nama = document.getElementById("nama").value.trim();
+  const poli = document.getElementById("poli").value.trim();
+  const gejala = document.getElementById("gejala").value.trim();
+  const penanganan = document.getElementById("penanganan").value.trim();
+  const obat = document.getElementById("obat").value.trim();
+  const kontrol = document.getElementById("kontrol").value.trim();
 
   if (!nama || !poli || !gejala || !penanganan || !obat || !kontrol) {
-    alert("Semua data wajib diisi");
+    alert("Semua data pasien wajib diisi");
     return;
   }
 
-  await setDoc(doc(db, "pasien", nama), {
+  let data = load("pasien");
+
+  data[nama] = {
     poli,
     gejala,
     penanganan,
     obat,
     kontrol
-  });
+  };
+
+  save("pasien", data);
+
+  document.getElementById("qr").innerHTML = "";
+  new QRCode("qr", nama);
 
   alert("Data pasien berhasil disimpan");
 }
-window.simpanPasien = simpanPasien;
 
 /* ================= HALAMAN PASIEN ================= */
 function halamanPasien() {
   app.innerHTML = `
-    <h3>Cek Data Pasien</h3>
+    <h3>Halaman Pasien</h3>
+    <input id="nama" placeholder="Nama Pasien">
+    <button onclick="lihatData()">Cari Data</button>
 
-    <input id="namaCari" placeholder="Nama Pasien">
-    <button onclick="cariPasien()">Cari</button>
+    <div id="reader"></div>
+    <button onclick="scanQR()">Scan QR</button>
 
-    <button class="secondary" onclick="welcome()">Kembali</button>
+    <button onclick="welcome()">Kembali</button>
   `;
 }
-window.halamanPasien = halamanPasien;
 
-/* ================= CARI PASIEN ================= */
-async function cariPasien() {
-  const nama = document.getElementById("namaCari").value;
-  const ref = doc(db, "pasien", nama);
-  const snap = await getDoc(ref);
+function lihatData() {
+  const nama = document.getElementById("nama").value.trim();
+  const data = load("pasien")[nama];
 
-  if (!snap.exists()) {
-    alert("Data tidak ditemukan");
+  if (!data) {
+    alert("Data pasien tidak ditemukan");
     return;
   }
 
-  const d = snap.data();
   app.innerHTML = `
     <h3>Data Pasien</h3>
-    <div class="card">
-      <p><b>Nama:</b> ${nama}</p>
-      <p><b>Poli:</b> ${d.poli}</p>
-      <p><b>Gejala:</b> ${d.gejala}</p>
-      <p><b>Penanganan:</b> ${d.penanganan}</p>
-      <p><b>Obat:</b> ${d.obat}</p>
-      <p><b>Kontrol:</b> ${d.kontrol}</p>
-    </div>
-
+    <p><b>Nama:</b> ${nama}</p>
+    <p><b>Poli:</b> ${data.poli}</p>
+    <p><b>Gejala:</b> ${data.gejala}</p>
+    <p><b>Penanganan:</b> ${data.penanganan}</p>
+    <p><b>Obat:</b> ${data.obat}</p>
+    <p><b>Tanggal Kontrol:</b> ${data.kontrol}</p>
     <button onclick="welcome()">Selesai</button>
   `;
 }
-window.cariPasien = cariPasien;
 
-/* ================= AUTO LOGIN CHECK ================= */
-onAuthStateChanged(auth, user => {
-  if (user) {
-    halamanDokter();
-  } else {
-    welcome();
+/* ================= SCAN QR ================= */
+function scanQR() {
+  const qr = new Html5Qrcode("reader");
+  qr.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    text => {
+      qr.stop();
+      tampilkanHasilQR(text);
+    }
+  );
+}
+
+function tampilkanHasilQR(nama) {
+  const data = load("pasien")[nama];
+
+  if (!data) {
+    alert("Data pasien tidak ditemukan");
+    return;
   }
-});
+
+  app.innerHTML = `
+    <h3>Data Pasien</h3>
+    <p><b>Nama:</b> ${nama}</p>
+    <p><b>Poli:</b> ${data.poli}</p>
+    <p><b>Gejala:</b> ${data.gejala}</p>
+    <p><b>Penanganan:</b> ${data.penanganan}</p>
+    <p><b>Obat:</b> ${data.obat}</p>
+    <p><b>Tanggal Kontrol:</b> ${data.kontrol}</p>
+    <button onclick="welcome()">Selesai</button>
+  `;
+}
+
+welcome();
