@@ -4,45 +4,65 @@ body {
   font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
+  min-height: 100vh;
 }
 
 #app {
-  width: 360px;
-  margin-top: 40px;
+  width: 520px;              /* ⬅️ lebih lebar untuk laptop */
+  margin-top: 60px;
   background: #020617;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 0 20px rgba(0,0,0,.5);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0,0,0,.5);
 }
 
 h2, h3 {
   text-align: center;
+  margin-bottom: 20px;
 }
 
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin: 6px 0;
-  border-radius: 8px;
-  border: none;
-}
-
+/* 🔥 INPUT LEBIH GEDE */
 input {
+  width: 100%;
+  padding: 14px 16px;        /* ⬅️ tinggi input */
+  margin: 10px 0;
+  border-radius: 10px;
+  font-size: 16px;           /* ⬅️ enak dibaca di laptop */
   background: #020617;
   color: white;
   border: 1px solid #334155;
 }
 
+/* 🔥 BUTTON LEBIH BESAR */
 button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 16px;
+  border: none;
   background: #6366f1;
   color: white;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button.secondary {
+  background: #334155;
 }
 
 button.danger {
   background: #ef4444;
 }
 
-button.secondary {
-  background: #334155;
+/* 📱 RESPONSIVE: HP TETAP AMAN */
+@media (max-width: 600px) {
+  #app {
+    width: 92%;
+    padding: 20px;
+  }
 }
