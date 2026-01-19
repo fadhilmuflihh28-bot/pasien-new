@@ -1,7 +1,7 @@
 const app = document.getElementById("app");
 
 /* ========= CONFIG ========= */
-const LOGIN_API = "https://script.google.com/macros/s/AKfycbw26YBPOqoe_MKzWxTVst_vfc_0eE5e3dbx-pfFzUEvF7zOgwLyXX-4rJAut1htT1Wq3A/exec";
+const LOGIN_API = "https://script.google.com/macros/s/AKfycbzrxWvctnslXDiYZuAC-yrEytrchHlnY_oerjcvodlTkpIgFO5sImdBmKgv4iFtrRaLzQ/exec";
 
 /* ========= STORAGE (sementara, pasien masih lokal) ========= */
 const save = (k,d)=>localStorage.setItem(k,JSON.stringify(d));
