@@ -1,15 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Sistem Pemeriksaan Pasien</title>
+  <meta charset="UTF-8">
+  <title>Login - Sistem Pemeriksaan Pasien</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="app"></div>
+<div class="login-box">
+  <h2>Sistem Pemeriksaan Pasien</h2>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-<script src="script.js"></script>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+
+  <button onclick="login()">Login</button>
+  <p id="msg"></p>
+</div>
+
+<script>
+const API_URL = "PASTE_URL_APPS_SCRIPT_KAMU_DI_SINI";
+
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    document.getElementById("msg").innerText = "Isi semua data!";
+    return;
+  }
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem("user", JSON.stringify(data));
+      window.location.href = "dashboard.html";
+    } else {
+      document.getElementById("msg").innerText = data.message;
+    }
+  })
+  .catch(err => {
+    document.getElementById("msg").innerText = "Server error!";
+    console.error(err);
+  });
+}
+</script>
+
 </body>
 </html>
