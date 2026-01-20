@@ -3,7 +3,7 @@ const app = document.getElementById("app");
 /* ========= CONFIG ========= */
 const LOGIN_API = "https://script.google.com/macros/s/AKfycbzrxWvctnslXDiYZuAC-yrEytrchHlnY_oerjcvodlTkpIgFO5sImdBmKgv4iFtrRaLzQ/exec";
 
-/* ========= STORAGE (sementara, pasien masih lokal) ========= */
+/* ========= STORAGE (PASlEN LOKAL) ========= */
 const save = (k,d)=>localStorage.setItem(k,JSON.stringify(d));
 const load = k => JSON.parse(localStorage.getItem(k)) || {};
 
@@ -17,65 +17,41 @@ function welcome(){
   `;
 }
 
-/* ========= LOGIN ========= */
+/* ========= LOGIN DOKTER (API ONLY) ========= */
 function loginDokter(){
   app.innerHTML=`
     <h3>Login Dokter</h3>
     <input id="user" placeholder="Username">
     <input id="pw" type="password" placeholder="Password">
     <button onclick="cekLogin()">Login</button>
-    <button onclick="register()">Daftar</button>
     <button class="secondary" onclick="welcome()">Kembali</button>
   `;
 }
 
 function cekLogin(){
-  const u = user.value.trim();
-  const p = pw.value.trim();
+  const u = document.getElementById("user").value.trim();
+  const p = document.getElementById("pw").value.trim();
 
-  if(!u || !p) return alert("Wajib diisi");
+  if(!u || !p) return alert("Username & password wajib diisi");
 
   fetch(LOGIN_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      action: "login",
       username: u,
       password: p
     })
   })
-  .then(res => res.json())
-  .then(data => {
-    if(data.status === "success"){
+  .then(r => r.json())
+  .then(d => {
+    if(d.status === "success"){
       halamanDokter();
     } else {
-      alert(data.message);
+      alert(d.message || "Login gagal");
     }
   })
-  .catch(err => {
-    console.error(err);
-    alert("Gagal koneksi ke server");
-  });
-}
-
-/* ========= REGISTER (MASIH LOKAL – NANTI BISA DIPINDAH KE SHEET) ========= */
-function register(){
-  app.innerHTML=`
-    <h3>Daftar Dokter</h3>
-    <input id="user" placeholder="Username">
-    <input id="pw" type="password" placeholder="Password">
-    <button onclick="simpanAkun()">Simpan</button>
-    <button class="secondary" onclick="loginDokter()">Kembali</button>
-  `;
-}
-
-function simpanAkun(){
-  let akun = load("akun");
-  if(!user.value || !pw.value) return alert("Tidak boleh kosong");
-  if(akun[user.value]) return alert("Username sudah ada");
-  akun[user.value] = pw.value;
-  save("akun", akun);
-  alert("Akun dibuat (lokal)");
-  loginDokter();
+  .catch(() => alert("Gagal koneksi ke server"));
 }
 
 /* ========= DOKTER ========= */
@@ -97,7 +73,8 @@ function halamanDokter(editNama=null){
 
 function simpanPasien(old){
   const f=["nama","poli","gejala","penanganan","obat","kontrol"];
-  for(let i of f) if(!document.getElementById(i).value) return alert("Lengkapi data");
+  for(let i of f) if(!document.getElementById(i).value) 
+    return alert("Lengkapi semua data");
 
   let data = load("pasien");
   const nama = old || document.getElementById("nama").value;
@@ -115,7 +92,7 @@ function simpanPasien(old){
   document.getElementById("qr").innerHTML="";
   new QRCode("qr", nama);
 
-  alert("Data tersimpan");
+  alert("Data pasien tersimpan");
 }
 
 /* ========= PASIEN ========= */
@@ -133,7 +110,7 @@ function halamanPasien(){
 function lihatData(){
   const n = nama.value;
   const d = load("pasien")[n];
-  if(!d) return alert("Tidak ditemukan");
+  if(!d) return alert("Data tidak ditemukan");
 
   app.innerHTML=`
     <h3>Data Pasien</h3>
@@ -151,7 +128,7 @@ function lihatData(){
 }
 
 function hapus(n){
-  if(!confirm("Yakin hapus?")) return;
+  if(!confirm("Yakin hapus data pasien?")) return;
   let d = load("pasien");
   delete d[n];
   save("pasien", d);
@@ -184,4 +161,5 @@ Kontrol: ${d.kontrol}
   w.print();
 }
 
+/* ========= START ========= */
 welcome();
